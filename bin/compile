@@ -77,7 +77,7 @@ ${db_name}&suffix=tar.gz&license_key=${MAXMIND_LICENSE_KEY}"
         info "$db_name: Downloaded"
     fi
 
-    tar -xzOf $tarball */$db_name.mmdb > $BUILD_DIR/data/$db_name.mmdb
+    tar -xzOf --wildcards $tarball */$db_name.mmdb > $BUILD_DIR/data/$db_name.mmdb
     info "$db_name: Extracted"
 done
 
