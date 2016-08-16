@@ -42,7 +42,7 @@ export_env_dir() {
     fi
 }
 
-export_env_dir $ENV_DIR, 'MAXMIND_LICENSE_KEY'
+export_env_dir $ENV_DIR 'MAXMIND_LICENSE_KEY'
 
 header "Checking MaxMind License"
 : "${MAXMIND_LICENSE_KEY:?env MAXMIND_LICENSE_KEY is missing}"
