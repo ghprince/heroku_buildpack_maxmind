@@ -2,7 +2,7 @@
 
 # this buildpack is valid for apps with mmdb_required.txt in the data/ folder
 if [ -f $1/data/mmdb_required.txt ]; then
-    echo "-----> MaxMind DB required"
+    echo "MaxMind DB"
     exit 0
 else
     exit 1
