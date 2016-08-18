@@ -42,11 +42,15 @@ export_env_dir() {
     fi
 }
 
-export_env_dir $ENV_DIR 'MAXMIND_LICENSE_KEY'
+export_env_dir $ENV_DIR '^(MAXMIND_LICENSE_KEY|MAXMIND_DB_NAMES)'
 
 header "Checking MaxMind License"
 : "${MAXMIND_LICENSE_KEY:?env MAXMIND_LICENSE_KEY is missing}"
 info "MAXMIND_LICENSE_KEY: ********"
+
+header "Checking MaxMind DB Names"
+: "${MAXMIND_DB_NAMES:?env MAXMIND_DB_NAMES is missing}"
+info "MAXMIND_DB_NAMES: $MAXMIND_DB_NAMES"
 
 calc_md5() {
     md5sum "$1"|cut -d' ' -f1 # linux
@@ -54,31 +58,41 @@ calc_md5() {
 }
 
 header "Downloding latest MaxMind DBs"
-mkdir -p $CACHE_DIR
-mkdir -p $BUILD_DIR/data
+mkdir -p $CACHE_DIR $BUILD_DIR/data
 cd $CACHE_DIR
-for db_name in GeoIP2-City GeoIP2-ISP GeoIP2-Connection-Type; do
+
+IFS=',' read -ra db_names <<< "$MAXMIND_DB_NAMES"
+
+for db_name in "${db_names[@]}"; do
     tarball=$CACHE_DIR/$db_name.tar.gz
+    md5_file=$CACHE_DIR/$db_name.md5
     download_required=true
+
+    info "$db_name: Checking Checksum"
 
     if [ -f $CACHE_DIR/$db_name.tar.gz ]; then
         md5_url="https://download.maxmind.com/app/geoip_download?edition_id=\
 ${db_name}&suffix=tar.gz.md5&license_key=${MAXMIND_LICENSE_KEY}"
-        if [ "$(curl -s $md5_url)" == "$(calc_md5 $tarball)" ]; then
+        curl -s -L --fail -o $md5_file $md5_url
+        if [ "$(cat $md5_file)" == "$(calc_md5 $tarball)" ]; then
             info "$db_name: Already latest, skip download"
             download_required=false
         fi
     fi
 
     if [ $download_required = true ]; then
+        info "$db_name: Downloading"
         url="https://download.maxmind.com/app/geoip_download?edition_id=\
 ${db_name}&suffix=tar.gz&license_key=${MAXMIND_LICENSE_KEY}"
-        curl -s -o $tarball $url
+        curl -s -L --fail -o $tarball $url
         info "$db_name: Downloaded"
     fi
 
+    info "$db_name: Extracting"
     tar -xzOf $tarball --wildcards */$db_name.mmdb > $BUILD_DIR/data/$db_name.mmdb
     info "$db_name: Extracted"
 done
+
+rm $CACHE_DIR/*.md5
 
 header "Build succeeded!"
