@@ -93,6 +93,6 @@ ${db_name}&suffix=tar.gz&license_key=${MAXMIND_LICENSE_KEY}"
     info "$db_name: Extracted"
 done
 
-rm $CACHE_DIR/*.md5
+rm -f $CACHE_DIR/*.md5
 
 header "Build succeeded!"
